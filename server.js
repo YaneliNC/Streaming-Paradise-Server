@@ -56,9 +56,11 @@ app.use('/permissions', permissionRoutes);
 app.use('/role-permission', rolePermissionRoutes);
 app.use('/api/contact', contactRoutes);
 app.use('/payments', paymentRoutes);
+app.use(contactRoutes)
 
 // Graficas Yaneli
 app.use(chartsRoutes);
+
 
 // Arrancar el servidor
 app.listen(PORT, () => {
