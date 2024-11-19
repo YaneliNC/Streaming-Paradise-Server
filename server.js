@@ -1,6 +1,6 @@
 const express = require('express');
 const cors = require('cors');
-const mysql = require('mysql2'); 
+const sequelize = require('./config'); // Importar configuración de Sequelize
 require('dotenv').config();
 
 // Importar rutas
@@ -22,29 +22,22 @@ const paymentRoutes = require('./routes/paymentRoutes');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Configurar conexión con la base de datos
-const db = mysql.createConnection({
-  host: process.env.MYSQL_HOST,
-  user: process.env.MYSQL_USER,
-  password: process.env.MYSQL_PASSWORD,
-  database: process.env.MYSQL_DATABASE,
-  port: process.env.MYSQL_PORT,
-});
-
 // Verificar conexión a la base de datos
-db.connect((err) => {
-  if (err) {
-    console.error('Error al conectar con la base de datos:', err);
-  } else {
+sequelize
+  .authenticate()
+  .then(() => {
     console.log('Conexión con la base de datos establecida.');
-  }
-});
+    return sequelize.sync(); // Sincronizar modelos
+  })
+  .then(() => {
+    console.log('Modelos sincronizados correctamente.');
+  })
+  .catch((error) => {
+    console.error('Error al conectar con la base de datos:', error);
+  });
 
-// Habilitar CORS para aceptar solicitudes desde cualquier origen
-app.use(cors({
-  origin: '*',
-  credentials: true,
-}));
+// Habilitar CORS
+app.use(cors({ origin: '*', credentials: true }));
 
 // Middlewares
 app.use(express.json());
@@ -63,7 +56,6 @@ app.use('/permissions', permissionRoutes);
 app.use('/role-permission', rolePermissionRoutes);
 app.use('/api/contact', contactRoutes);
 app.use('/payments', paymentRoutes);
-app.use(contactRoutes);
 
 // Graficas Yaneli
 app.use(chartsRoutes);
