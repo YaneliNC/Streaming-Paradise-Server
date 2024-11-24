@@ -97,42 +97,44 @@ router.delete('/:idcoment', async (req, res) => {
   }
 });
 
-// Ruta para obtener los comentarios de los videos de un creador específico
 router.get('/miscomentarios/:creatorId', async (req, res) => {
   try {
+    // Obtener el creatorId de los parámetros de la solicitud
     const creatorId = req.params.creatorId;
 
+    // Ejecutar la consulta SQL con el creatorId proporcionado
     const results = await sequelize.query(
       `SELECT 
-          v.idvideo,
-          v.title,
-          r.idcoment,
-          r.comentario,
-          r.fecha,
-          r.iduser AS id_usuario_comentador,
-          u.name AS nombre_usuario_comentador
+          v."idvideo",       -- Asegúrate de usar comillas dobles para columnas con camelCase
+          v."title",         -- Lo mismo aquí para el título
+          r."idcoment",
+          r."comentario",
+          r."fecha",
+          r."iduser" AS "id_usuario_comentador",  -- Especificamos las comillas para asegurar el nombre correcto
+          u."name" AS "nombre_usuario_comentador"  -- Usamos 'name' como estaba originalmente
        FROM 
-          videos v
+          "videos" v
        LEFT JOIN 
-          reseña r ON v.idvideo = r.idvideo
+          "reseña" r ON v."idvideo" = r."idvideo"
        LEFT JOIN 
-          users u ON r.iduser = u.id
+          "users" u ON r."iduser" = u."id"    -- Asegúrate de utilizar comillas dobles para las tablas y columnas
        WHERE 
-          v.creatorId = :creatorId
+          v."creatorId" = :creatorId  -- Utiliza comillas dobles aquí para evitar el error en PostgreSQL
        ORDER BY 
-          v.idvideo, r.fecha DESC`,
+          v."idvideo", r."fecha" DESC`,
       {
-        replacements: { creatorId },
+        replacements: { creatorId },  // Paso del creatorId de manera segura
         type: sequelize.QueryTypes.SELECT,
       }
     );
 
-    res.json(results);
+    res.json(results);  // Enviar los resultados como respuesta en JSON
   } catch (error) {
     console.error('Error al obtener comentarios:', error);
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: error.message });  // Manejo de errores
   }
 });
+
 
 // Ruta para obtener las calificaciones de los videos de un creador específico
 router.get('/miscalificaciones/:creatorId', async (req, res) => {
