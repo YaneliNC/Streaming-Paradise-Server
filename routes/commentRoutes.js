@@ -97,6 +97,7 @@ router.delete('/:idcoment', async (req, res) => {
   }
 });
 
+
 router.get('/miscomentarios/:creatorId', async (req, res) => {
   try {
     // Obtener el creatorId de los parámetros de la solicitud
@@ -110,16 +111,16 @@ router.get('/miscomentarios/:creatorId', async (req, res) => {
           r."idcoment",
           r."comentario",
           r."fecha",
-          r."iduser" AS "id_usuario_comentador",  -- Especificamos las comillas para asegurar el nombre correcto
-          u."name" AS "nombre_usuario_comentador"  -- Usamos 'name' como estaba originalmente
+          r."iduser" AS "id_usuario_comentador",  
+          COALESCE(u."name", 'Desconocido') AS "nombre_usuario_comentador"  -- Usamos COALESCE para reemplazar NULL con 'Desconocido'
        FROM 
           "videos" v
        LEFT JOIN 
           "reseña" r ON v."idvideo" = r."idvideo"
        LEFT JOIN 
-          "users" u ON r."iduser" = u."id"    -- Asegúrate de utilizar comillas dobles para las tablas y columnas
+          "users" u ON r."iduser" = u."id"    
        WHERE 
-          v."creatorId" = :creatorId  -- Utiliza comillas dobles aquí para evitar el error en PostgreSQL
+          v."creatorId" = :creatorId
        ORDER BY 
           v."idvideo", r."fecha" DESC`,
       {
@@ -143,23 +144,23 @@ router.get('/miscalificaciones/:creatorId', async (req, res) => {
 
     const results = await sequelize.query(
       `SELECT 
-          v.idvideo,
-          v.title,
-          r.fecha,
-          ra.score AS calificacion,
-          u.name AS nombre_usuario_calificador
+          v."idvideo", 
+          v."title", 
+          r."fecha", 
+          ra."score" AS "calificacion", 
+          u."name" AS "nombre_usuario_calificador"  
        FROM 
-          videos v
+          "videos" v
        LEFT JOIN 
-          reseña r ON v.idvideo = r.idvideo
+          "reseña" r ON v."idvideo" = r."idvideo"
        LEFT JOIN 
-          ratings ra ON v.idvideo = ra.idvideo
+          "ratings" ra ON v."idvideo" = ra."idvideo"
        LEFT JOIN 
-          users u ON ra.iduser = u.id
+          "users" u ON ra."iduser" = u."id"
        WHERE 
-          v.creatorId = :creatorId
+          v."creatorId" = :creatorId
        ORDER BY 
-          v.idvideo, r.fecha DESC`,
+          v."idvideo", r."fecha" DESC`,
       {
         replacements: { creatorId },
         type: sequelize.QueryTypes.SELECT,
@@ -180,22 +181,22 @@ router.get('/top-interacciones/:creatorId', async (req, res) => {
 
     const results = await sequelize.query(
       `SELECT 
-          u.name AS nombre_usuario,
-          COUNT(DISTINCT r.idvideo) + COUNT(DISTINCT ra.idvideo) AS total_interacciones
+          u."name" AS "nombre_usuario", 
+          COUNT(DISTINCT r."idvideo") + COUNT(DISTINCT ra."idvideo") AS "total_interacciones"
       FROM 
-          users u
+          "users" u
       LEFT JOIN 
-          reseña r ON u.id = r.iduser
+          "reseña" r ON u."id" = r."iduser"
       LEFT JOIN 
-          ratings ra ON u.id = ra.iduser
+          "ratings" ra ON u."id" = ra."iduser"
       LEFT JOIN 
-          videos v ON v.idvideo = r.idvideo OR v.idvideo = ra.idvideo
+          "videos" v ON v."idvideo" = r."idvideo" OR v."idvideo" = ra."idvideo"
       WHERE 
-          v.creatorId = :creatorId
+          v."creatorId" = :creatorId
       GROUP BY 
-          u.id
+          u."id"
       ORDER BY 
-          total_interacciones DESC
+          "total_interacciones" DESC
       LIMIT 5`,
       {
         replacements: { creatorId },
@@ -210,27 +211,19 @@ router.get('/top-interacciones/:creatorId', async (req, res) => {
   }
 });
 
-// Ruta para obtener el género que más han visto los videos
+// Ruta para obtener el GENERO que más han visto los videos
 router.get('/usergenero/:creatorId', async (req, res) => {
   try {
     const creatorId = req.params.creatorId;
 
     const results = await sequelize.query(
-      `SELECT 
-          u.genero AS genero_usuario, 
-          COUNT(DISTINCT r.idvideo) AS videos_vistos
-       FROM 
-          videos v
-       JOIN 
-          reseña r ON v.idvideo = r.idvideo
-       JOIN 
-          users u ON r.iduser = u.id
-       WHERE 
-          v.creatorId = :creatorId
-       GROUP BY 
-          u.genero
-       ORDER BY 
-          videos_vistos DESC`,
+      `SELECT u."genero" AS "genero_usuario", COUNT(DISTINCT r."idvideo") AS "videos_vistos"
+      FROM "videos" v
+      JOIN "reseña" r ON v."idvideo" = r."idvideo"
+      JOIN "users" u ON r."iduser" = u."id"
+      WHERE v."creatorId" = :creatorId
+      GROUP BY u."genero"
+      ORDER BY "videos_vistos" DESC`,
       {
         replacements: { creatorId },
         type: sequelize.QueryTypes.SELECT,
@@ -239,7 +232,7 @@ router.get('/usergenero/:creatorId', async (req, res) => {
 
     res.json(results);
   } catch (error) {
-    console.error('Error al obtener los géneros:', error);
+    console.error('Error al obtener los generos:', error);
     res.status(500).json({ message: error.message });
   }
 });
@@ -251,25 +244,19 @@ router.get('/userpais/:creatorId', async (req, res) => {
 
     const results = await sequelize.query(
       `SELECT 
-          u.country AS pais,
-          COUNT(DISTINCT u.id) AS usuarios_unicos,
-          ROUND((COUNT(DISTINCT u.id) * 100.0 / 
-                 (SELECT COUNT(DISTINCT r.iduser) 
-                  FROM reseña r
-                  JOIN videos v ON r.idvideo = v.idvideo
-                  WHERE v.creatorId = :creatorId)), 2) AS porcentaje_usuarios
-       FROM 
-          videos v
-       JOIN 
-          reseña r ON v.idvideo = r.idvideo
-       JOIN 
-          users u ON r.iduser = u.id
-       WHERE 
-          v.creatorId = :creatorId
-       GROUP BY 
-          u.country
-       ORDER BY 
-          porcentaje_usuarios DESC`,
+          u."country" AS "pais", 
+          COUNT(DISTINCT u."id") AS "usuarios_unicos", 
+          ROUND((COUNT(DISTINCT u."id") * 100.0 / 
+                 (SELECT COUNT(DISTINCT r."iduser") 
+                  FROM "reseña" r
+                  JOIN "videos" v ON r."idvideo" = v."idvideo"
+                  WHERE v."creatorId" = :creatorId)), 2) AS "porcentaje_usuarios"
+      FROM "videos" v
+      JOIN "reseña" r ON v."idvideo" = r."idvideo"
+      JOIN "users" u ON r."iduser" = u."id"
+      WHERE v."creatorId" = :creatorId
+      GROUP BY u."country"
+      ORDER BY "porcentaje_usuarios" DESC`,
       {
         replacements: { creatorId },
         type: sequelize.QueryTypes.SELECT,
@@ -278,23 +265,21 @@ router.get('/userpais/:creatorId', async (req, res) => {
 
     res.json(results);
   } catch (error) {
-    console.error('Error al obtener los países:', error);
+    console.error('Error al obtener los paises:', error);
     res.status(500).json({ message: error.message });
   }
 });
 
-// Ruta para obtener la suma de visualizaciones
+// Ruta para obtener las visualizaciones totales de los videos
 router.get('/views/:creatorId', async (req, res) => {
   try {
     const creatorId = req.params.creatorId;
 
     const results = await sequelize.query(
       `SELECT 
-          SUM(v.views) AS total_visualizaciones
-       FROM 
-          videos v
-       WHERE 
-          v.creatorId = :creatorId`,
+          SUM(v."views") AS "total_visualizaciones"
+      FROM "videos" v
+      WHERE v."creatorId" = :creatorId`,
       {
         replacements: { creatorId },
         type: sequelize.QueryTypes.SELECT,
@@ -303,31 +288,25 @@ router.get('/views/:creatorId', async (req, res) => {
 
     res.json(results);
   } catch (error) {
-    console.error('Error al obtener las visualizaciones:', error);
+    console.error('Error al obtener las views:', error);
     res.status(500).json({ message: error.message });
   }
 });
 
-// Ruta para obtener el número de usuarios únicos
+// Ruta para obtener el total de usuarios que han interactuado
 router.get('/users/:creatorId', async (req, res) => {
   try {
     const creatorId = req.params.creatorId;
 
     const results = await sequelize.query(
-      `SELECT 
-          COUNT(DISTINCT u.id) AS total_usuarios
-       FROM 
-          users u
-       LEFT JOIN 
-          reseña r ON u.id = r.iduser
-       LEFT JOIN 
-          ratings rt ON u.id = rt.iduser
-       LEFT JOIN 
-          videos v ON (r.idvideo = v.idvideo OR rt.idvideo = v.idvideo)
-       WHERE 
-          v.creatorId = :creatorId
-          OR r.idvideo IN (SELECT idvideo FROM videos WHERE creatorId = :creatorId)
-          OR rt.idvideo IN (SELECT idvideo FROM videos WHERE creatorId = :creatorId)`,
+      `SELECT COUNT(DISTINCT u."id") AS "total_usuarios"
+      FROM "users" u
+      LEFT JOIN "reseña" r ON u."id" = r."iduser"
+      LEFT JOIN "ratings" rt ON u."id" = rt."iduser"
+      LEFT JOIN "videos" v ON (r."idvideo" = v."idvideo" OR rt."idvideo" = v."idvideo")
+      WHERE v."creatorId" = :creatorId
+      OR r."idvideo" IN (SELECT "idvideo" FROM "videos" WHERE "creatorId" = :creatorId)
+      OR rt."idvideo" IN (SELECT "idvideo" FROM "videos" WHERE "creatorId" = :creatorId)`,
       {
         replacements: { creatorId },
         type: sequelize.QueryTypes.SELECT,
@@ -336,32 +315,28 @@ router.get('/users/:creatorId', async (req, res) => {
 
     res.json(results);
   } catch (error) {
-    console.error('Error al obtener los usuarios:', error);
+    console.error('Error al obtener las views:', error);
     res.status(500).json({ message: error.message });
   }
 });
 
-// Ruta para obtener el género más visto de los videos
+// Ruta para obtener el género de los videos más vistos
 router.get('/generovideo/:creatorId', async (req, res) => {
   try {
     const creatorId = req.params.creatorId;
 
     const results = await sequelize.query(
       `SELECT 
-          v.genero AS genero_video,
-          SUM(v.views) AS total_vistas,
-          ROUND((SUM(v.views) * 100.0 / 
-                 (SELECT SUM(views) 
-                  FROM videos 
-                  WHERE creatorId = :creatorId)), 2) AS porcentaje_vistas
-       FROM 
-          videos v
-       WHERE 
-          v.creatorId = :creatorId
-       GROUP BY 
-          v.genero
-       ORDER BY 
-          porcentaje_vistas DESC`,
+          v."genero" AS "genero_video", 
+          SUM(v."views") AS "total_vistas", 
+          ROUND((SUM(v."views") * 100.0 / 
+                 (SELECT SUM("views") 
+                  FROM "videos" 
+                  WHERE "creatorId" = :creatorId)), 2) AS "porcentaje_vistas"
+      FROM "videos" v
+      WHERE v."creatorId" = :creatorId
+      GROUP BY v."genero"
+      ORDER BY "porcentaje_vistas" DESC`,
       {
         replacements: { creatorId },
         type: sequelize.QueryTypes.SELECT,
@@ -370,7 +345,7 @@ router.get('/generovideo/:creatorId', async (req, res) => {
 
     res.json(results);
   } catch (error) {
-    console.error('Error al obtener los géneros:', error);
+    console.error('Error al obtener los generos:', error);
     res.status(500).json({ message: error.message });
   }
 });
