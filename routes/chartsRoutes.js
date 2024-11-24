@@ -18,11 +18,12 @@ router.get('/usuarios-genero', async (req, res) => {
                 genero`,
             { type: Charts.sequelize.QueryTypes.SELECT }
         );
-        res.json(results); // Enviar los resultados como respuesta en JSON
+        res.json(results);
     } catch (error) {
-        res.status(500).json({ message: error.message }); // Manejo de errores
+        res.status(500).json({ message: error.message });
     }
 });
+
 
 // Ruta para obtener el conteo de usuarios por rango de edad
 router.get('/usuarios-rango-edad', async (req, res) => {
@@ -46,11 +47,12 @@ router.get('/usuarios-rango-edad', async (req, res) => {
                 rango_edad;`,
             { type: Charts.sequelize.QueryTypes.SELECT }
         );
-        res.json(results); // Enviar los resultados como respuesta en JSON
+        res.json(results);
     } catch (error) {
-        res.status(500).json({ message: error.message }); // Manejo de errores
+        res.status(500).json({ message: error.message });
     }
 });
+
 
 // Ruta para obtener el top 5 de países con mayor cantidad de usuarios
 router.get('/usuarios-top-paises', async (req, res) => {
@@ -68,11 +70,12 @@ router.get('/usuarios-top-paises', async (req, res) => {
              LIMIT 5;`,
             { type: Charts.sequelize.QueryTypes.SELECT }
         );
-        res.json(results); // Enviar los resultados como respuesta en JSON
+        res.json(results);
     } catch (error) {
-        res.status(500).json({ message: error.message }); // Manejo de errores
+        res.status(500).json({ message: error.message });
     }
 });
+
 
 // Ruta para obtener el idsub con mayor cantidad de compras y su nombre
 router.get('/top-idsub-compras', async (req, res) => {
@@ -93,11 +96,12 @@ router.get('/top-idsub-compras', async (req, res) => {
              LIMIT 1;`,
             { type: Charts.sequelize.QueryTypes.SELECT }
         );
-        res.json(results); // Enviar los resultados como respuesta en JSON
+        res.json(results);
     } catch (error) {
-        res.status(500).json({ message: error.message }); // Manejo de errores
+        res.status(500).json({ message: error.message });
     }
 });
+
 
 // Ruta para obtener el top 3 de géneros favoritos más vistos
 router.get('/top-generos-favoritos', async (req, res) => {
@@ -117,44 +121,44 @@ router.get('/top-generos-favoritos', async (req, res) => {
              LIMIT 3;`,
             { type: Charts.sequelize.QueryTypes.SELECT }
         );
-        res.json(results); // Enviar los resultados como respuesta en JSON
+        res.json(results);
     } catch (error) {
-        res.status(500).json({ message: error.message }); // Manejo de errores
+        res.status(500).json({ message: error.message });
     }
 });
+
 
 // Ruta para obtener el total de usuarios
 router.get('/total-usuarios', async (req, res) => {
     try {
         const results = await Charts.sequelize.query(
             `SELECT COUNT(*) AS total_usuarios
-        FROM users
-        WHERE id IS NOT NULL;`,
+             FROM users
+             WHERE id IS NOT NULL;`,
             { type: Charts.sequelize.QueryTypes.SELECT }
         );
-        res.json(results); // Enviar los resultados como respuesta en JSON
+        res.json(results);
     } catch (error) {
-        res.status(500).json({ message: error.message }); // Manejo de errores
+        res.status(500).json({ message: error.message });
     }
 });
+
 
 // Ruta para obtener el total de compras por mes en los últimos 6 meses
 router.get('/total-compras', async (req, res) => {
     try {
         const results = await Charts.sequelize.query(
-            `SELECT DATE_FORMAT(fecha, '%Y-%m') AS mes, SUM(total) AS total_ventas
+            `SELECT TO_CHAR(fecha, 'YYYY-MM') AS mes, SUM(total) AS total_ventas
              FROM compra
-             WHERE fecha >= DATE_SUB(NOW(), INTERVAL 6 MONTH)
+             WHERE fecha >= NOW() - INTERVAL '6 months'
              GROUP BY mes
              ORDER BY mes ASC;`,
             { type: Charts.sequelize.QueryTypes.SELECT }
         );
-        res.json(results); // Enviar los resultados como respuesta en JSON
+        res.json(results);
     } catch (error) {
-        res.status(500).json({ message: error.message }); // Manejo de errores
+        res.status(500).json({ message: error.message });
     }
 });
-
-
 
 module.exports = router;
