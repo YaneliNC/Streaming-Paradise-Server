@@ -176,19 +176,35 @@ router.get('/:id', async (req, res) => {
 router.delete('/:id', async (req, res) => {
   const { id } = req.params;
 
+  console.log(`ID recibido para eliminación: ${id}`);
+
   try {
     const userToDelete = await User.findByPk(id);
+
+    // Verificar si el usuario existe
     if (!userToDelete) {
       return res.status(404).json({ message: 'Usuario no encontrado' });
     }
 
-    await userToDelete.destroy(); // Elimina el usuario de la base de datos
+    // Intentar eliminar el usuario
+    await userToDelete.destroy();
     res.status(200).json({ message: 'Usuario eliminado exitosamente' });
+
   } catch (error) {
     console.error('Error al eliminar el usuario:', error);
+
+    // Detallar el error
+    if (error.name === 'SequelizeForeignKeyConstraintError') {
+      return res.status(400).json({
+        message: 'No se puede eliminar el usuario debido a restricciones de integridad referencial.',
+      });
+    }
+    
+    // Cualquier otro error
     res.status(500).json({ message: 'Error al eliminar el usuario' });
   }
 });
+
 
 
 module.exports = router;
