@@ -106,7 +106,7 @@ router.get('/total-usuarios', async (req, res) => {
       { type: Charts.sequelize.QueryTypes.SELECT }
     );
 
-    res.json(results[0]); // Enviar el primer resultado como JSON
+    res.json(results[0]); // Enviar el resultado como JSON
   } catch (error) {
     console.error('Error al obtener el total de usuarios:', error);
     res.status(500).json({ message: 'Error al obtener el total de usuarios' });
