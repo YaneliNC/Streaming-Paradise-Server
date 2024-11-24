@@ -148,7 +148,7 @@ router.get('/miscalificaciones/:creatorId', async (req, res) => {
           v."title", 
           r."fecha", 
           ra."score" AS "calificacion", 
-          u."name" AS "nombre_usuario_calificador"  
+           COALESCE(u."name", 'Desconocido') AS "nombre_usuario_calificador"  -- Usamos COALESCE para reemplazar NULL con 'Desconocido'
        FROM 
           "videos" v
        LEFT JOIN 
