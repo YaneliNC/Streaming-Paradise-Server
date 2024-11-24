@@ -95,20 +95,24 @@ router.get('/usuarios-genero', async (req, res) => {
     }
   });
   
-  // Ruta para obtener el total de usuarios
-  router.get('/total-usuarios', async (req, res) => {
-    try {
-      const results = await Charts.sequelize.query(
-        `SELECT COUNT(*) AS total_usuarios 
-         FROM users 
-         WHERE id IS NOT NULL`,
-        { type: Charts.sequelize.QueryTypes.SELECT }
-      );
-      res.json(results);
-    } catch (error) {
-      res.status(500).json({ message: error.message });
-    }
-  });
+// Ruta para obtener el total de usuarios
+router.get('/total-usuarios', async (req, res) => {
+  try {
+    const results = await Charts.sequelize.query(
+      `
+      SELECT COUNT(*)::INTEGER AS total_usuarios 
+      FROM users
+      `,
+      { type: Charts.sequelize.QueryTypes.SELECT }
+    );
+
+    res.json(results[0]); // Enviar el primer resultado como JSON
+  } catch (error) {
+    console.error('Error al obtener el total de usuarios:', error);
+    res.status(500).json({ message: 'Error al obtener el total de usuarios' });
+  }
+});
+
   
   // Ruta para obtener el total de compras por mes en los últimos 6 meses
   router.get('/total-compras', async (req, res) => {
