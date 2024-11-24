@@ -211,19 +211,27 @@ router.get('/top-interacciones/:creatorId', async (req, res) => {
   }
 });
 
-// Ruta para obtener el GENERO que más han visto los videos
+// Ruta para obtener cuántos usuarios de cada género han visto los videos
 router.get('/usergenero/:creatorId', async (req, res) => {
   try {
     const creatorId = req.params.creatorId;
 
     const results = await sequelize.query(
-      `SELECT u."genero" AS "genero_usuario", COUNT(DISTINCT r."idvideo") AS "videos_vistos"
-      FROM "videos" v
-      JOIN "reseña" r ON v."idvideo" = r."idvideo"
-      JOIN "users" u ON r."iduser" = u."id"
-      WHERE v."creatorId" = :creatorId
-      GROUP BY u."genero"
-      ORDER BY "videos_vistos" DESC`,
+      `SELECT 
+          u."genero" AS "genero_usuario", 
+          COUNT(DISTINCT u."id") AS "usuarios_que_vieron"
+      FROM 
+          "videos" v
+      JOIN 
+          "reseña" r ON v."idvideo" = r."idvideo"
+      JOIN 
+          "users" u ON r."iduser" = u."id"
+      WHERE 
+          v."creatorId" = :creatorId
+      GROUP BY 
+          u."genero"
+      ORDER BY 
+          "usuarios_que_vieron" DESC`,
       {
         replacements: { creatorId },
         type: sequelize.QueryTypes.SELECT,
@@ -236,6 +244,7 @@ router.get('/usergenero/:creatorId', async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 });
+
 
 // Ruta para obtener el porcentaje de los países que más han visto los videos
 router.get('/userpais/:creatorId', async (req, res) => {
