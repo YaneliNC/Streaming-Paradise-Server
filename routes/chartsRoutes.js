@@ -9,7 +9,7 @@ router.get('/usuarios-genero', async (req, res) => {
       const results = await Charts.sequelize.query(
         `SELECT genero, COUNT(*) AS cantidad 
          FROM users 
-         WHERE genero IN ('masculino', 'femenino') 
+         WHERE genero IN ('Masculino', 'Femenino') 
          GROUP BY genero`,
         { type: Charts.sequelize.QueryTypes.SELECT }
       );
