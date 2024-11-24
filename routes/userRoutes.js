@@ -179,7 +179,7 @@ router.delete('/:id', async (req, res) => {
   console.log(`ID recibido para eliminación: ${id}`);
 
   try {
-    // Buscar el usuario a eliminar
+    // Buscar el usuario a eliminar por su ID
     const userToDelete = await User.findByPk(id);
 
     // Verificar si el usuario existe
@@ -187,30 +187,18 @@ router.delete('/:id', async (req, res) => {
       return res.status(404).json({ message: 'Usuario no encontrado' });
     }
 
-    // Intentar eliminar el usuario
+    // Eliminar el usuario
     await userToDelete.destroy();
     return res.status(200).json({ message: 'Usuario eliminado exitosamente' });
 
   } catch (error) {
     console.error('Error al eliminar el usuario:', error);
 
-    // Registrar el error completo para obtener más detalles
-    console.error(error.stack);  // Esto muestra el stacktrace para más detalles
-
-    // Si hay un error de clave foránea
-    if (error.name === 'SequelizeForeignKeyConstraintError') {
-      return res.status(400).json({
-        message: 'No se puede eliminar el usuario debido a restricciones de integridad referencial.',
-      });
-    }
-
-    // Otro tipo de error (por ejemplo, problemas en la base de datos)
-    res.status(500).json({
-      message: 'Error al eliminar el usuario',
-      error: error.message, // Proveer detalles adicionales del error
-    });
+    // Devolver error genérico en caso de otros problemas
+    res.status(500).json({ message: 'Error al eliminar el usuario' });
   }
 });
+
 
 
 
