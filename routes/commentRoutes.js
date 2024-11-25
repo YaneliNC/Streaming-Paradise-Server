@@ -216,7 +216,6 @@ router.get('/usergenero/:creatorId', async (req, res) => {
   try {
     const creatorId = req.params.creatorId;
 
-    // Consulta para obtener el conteo de usuarios por género que han visto los videos
     const results = await sequelize.query(
       `SELECT 
           u."genero" AS "genero_usuario", 
@@ -228,30 +227,24 @@ router.get('/usergenero/:creatorId', async (req, res) => {
       LEFT JOIN 
           "users" u ON r."iduser" = u."id"
       WHERE 
-          v."creatorId" = :creatorId 
-          AND u."genero" IN ('Masculino', 'Femenino')  -- Filtramos para incluir solo los géneros Masculino y Femenino
+          v."creatorId" = :creatorId
       GROUP BY 
           u."genero"
       ORDER BY 
-          "usuarios_que_vieron" DESC`,  // Ordenamos por el número de usuarios que han visto los videos
+          "usuarios_que_vieron" DESC`,
       {
         replacements: { creatorId },
         type: sequelize.QueryTypes.SELECT,
       }
     );
 
-    // Log de los resultados para depuración
-    console.log(results);
-
-    // Responder con los resultados
+    console.log(results); // Log de los resultados para depuración
     res.json(results);
   } catch (error) {
     console.error('Error al obtener los géneros:', error);
     res.status(500).json({ message: error.message });
   }
 });
-
-
 
 
 // Ruta para obtener el porcentaje de los países que más han visto los videos
