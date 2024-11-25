@@ -253,6 +253,7 @@ router.get('/usergenero/:creatorId', async (req, res) => {
 
 
 
+
 // Ruta para obtener el porcentaje de los países que más han visto los videos
 router.get('/userpais/:creatorId', async (req, res) => {
   try {
