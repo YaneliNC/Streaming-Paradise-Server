@@ -222,9 +222,9 @@ router.get('/usergenero/:creatorId', async (req, res) => {
           COUNT(DISTINCT u."id") AS "usuarios_que_vieron"
       FROM 
           "videos" v
-      JOIN 
+      LEFT JOIN 
           "reseña" r ON v."idvideo" = r."idvideo"
-      JOIN 
+      LEFT JOIN 
           "users" u ON r."iduser" = u."id"
       WHERE 
           v."creatorId" = :creatorId
@@ -238,9 +238,10 @@ router.get('/usergenero/:creatorId', async (req, res) => {
       }
     );
 
+    console.log(results); // Log de los resultados para depuración
     res.json(results);
   } catch (error) {
-    console.error('Error al obtener los generos:', error);
+    console.error('Error al obtener los géneros:', error);
     res.status(500).json({ message: error.message });
   }
 });
