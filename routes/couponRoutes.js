@@ -3,7 +3,7 @@ const router = express.Router();
 const Coupon = require('../models/Coupon');
 const { Op } = require('sequelize');
 
-// Obtener todos los cupones
+// Obtener todos los cuponessz
 router.get('/cupones', async (req, res) => {
     try {
         const cupones = await Coupon.findAll();
