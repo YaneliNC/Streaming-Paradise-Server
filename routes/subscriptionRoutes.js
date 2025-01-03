@@ -27,29 +27,42 @@ const { Op } = require('sequelize');
 
 router.post('/nuevasub', async (req, res) => {
   try {
-    const { startDate, endDate, nombre, precio, descripcion, descuento = 0, p_final } = req.body;  // Valor por defecto para descuento
+    const subscriptions = req.body; // Obtener el arreglo de suscripciones desde el body
 
-    // Validar que los valores numéricos son válidos
-    if (precio < 0 || descuento < 0 || p_final < 0) {
-      return res.status(400).json({ message: 'Valores numéricos inválidos' });
+    // Validar que cada suscripción tenga los campos requeridos
+    const createdSubscriptions = [];
+    for (let subscription of subscriptions) {
+      const { startDate, endDate, nombre, precio, descripcion, descuento = 0, p_final } = subscription;
+
+      // Validar que los valores numéricos son válidos
+      if (precio < 0 || descuento < 0 || p_final < 0 || !nombre || !descripcion) {
+        return res.status(400).json({ message: 'Valores inválidos o campos faltantes en una de las suscripciones' });
+      }
+
+      // Crear la suscripción
+      const newSubscription = await Subscription.create({
+        idsub: subscription.idsub, // Si necesitas asignar un idsub manualmente
+        nombre,
+        precio,
+        descripcion,
+        descuento,
+        p_final,
+        isActive: subscription.isActive,
+        startDate: new Date(startDate),
+        endDate: new Date(endDate),
+      });
+
+      createdSubscriptions.push(newSubscription);
     }
 
-    const subscription = await Subscription.create({
-      startDate: new Date(startDate),
-      endDate: new Date(endDate),
-      nombre,
-      precio,
-      descripcion,
-      descuento,
-      p_final,
-      isActive: true,
-    });
-
-    res.status(201).json(subscription);
+    // Responder con las suscripciones creadas
+    res.status(201).json({ message: 'Suscripciones creadas exitosamente', subscriptions: createdSubscriptions });
   } catch (error) {
+    console.error("Error al crear suscripciones:", error);
     res.status(400).json({ error: error.message });
   }
 });
+
 
 
 // Obtener todas las suscripciones (GET) - Ruta con nombre
