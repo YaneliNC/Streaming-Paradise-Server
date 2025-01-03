@@ -8,34 +8,48 @@ const crypto = require('crypto');
 
 
 
-  router.post('/register', async (req, res) => {
-    try {
-      const { name, email, password, age, country, favoriteGenre, genero, idrol } = req.body; // Agrega el campo genero
+router.post('/register', async (req, res) => {
+  try {
+    const users = req.body; // Suponiendo que recibes un arreglo de usuarios en el body
+
+    // Validar que sea un arreglo
+    if (!Array.isArray(users)) {
+      return res.status(400).json({ message: 'El formato del body debe ser un arreglo de usuarios' });
+    }
+
+    const createdUsers = [];
+
+    for (const userData of users) {
+      const { name, email, password, age, country, favoriteGenre, genero, idrol } = userData;
 
       // Verificar si el email ya está registrado
-      let user = await User.findOne({ where: { email } });
-      if (user) {
-        return res.status(400).json({ message: 'El usuario ya existe' });
+      let existingUser = await User.findOne({ where: { email } });
+      if (existingUser) {
+        continue; // Saltar al siguiente usuario si el email ya existe
       }
 
       // Crear el nuevo usuario
-      user = await User.create({
+      const newUser = await User.create({
         name,
         email,
         password, // El hook beforeCreate encriptará la contraseña
         age,
         country,
         favoriteGenre,
-        genero: genero || 'No especificado', // Agrega genero con un valor predeterminado si es necesario
-        idrol // No asignar un rol por defecto, se usará el valor proporcionado o quedará como null
+        genero: genero || 'No especificado', // Valor predeterminado
+        idrol
       });
 
-      res.status(201).json(user);
-    } catch (error) {
-      console.error("Error en el registro:", error);
-      res.status(400).json({ error: error.message });
+      createdUsers.push(newUser);
     }
-  });
+
+    res.status(201).json({ message: 'Usuarios registrados exitosamente', createdUsers });
+  } catch (error) {
+    console.error("Error en el registro:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 
 
 // Iniciar sesión
