@@ -7,22 +7,24 @@ const User = require('../models/User');
 // Crear un nuevo video.
 router.post('/create', async (req, res) => {
   try {
-    const { title, url, creatorId, descripcion, genero } = req.body;
+    const videos = req.body;  // Esperamos un array de videos en el cuerpo de la solicitud
 
-    // Crear el nuevo video
-    const newVideo = await Video.create({
-      title,
-      url,
-      creatorId,
-      descripcion,
-      genero
-    });
+    // Validar que el arreglo de videos no esté vacío
+    if (!Array.isArray(videos) || videos.length === 0) {
+      return res.status(400).json({ message: 'Debe proporcionar un arreglo de videos' });
+    }
 
-    res.status(201).json(newVideo);
+    // Crear los videos en la base de datos
+    const createdVideos = await Video.bulkCreate(videos);
+
+    // Responder con los videos creados
+    res.status(201).json(createdVideos);
   } catch (error) {
+    console.error("Error al crear videos:", error);
     res.status(500).json({ error: error.message });
   }
 });
+
 
 //Obtener todos los videos con el nombre del creador
 router.get('/catalogo', async (req, res) => {
